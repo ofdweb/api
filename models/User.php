@@ -2,38 +2,72 @@
 
 namespace app\models;
 
-class User extends \yii\base\Object implements \yii\web\IdentityInterface
+use app\models\query\UserQuery;
+use Yii;
+use yii\db\ActiveRecord;
+use yii\web\IdentityInterface;
+
+/**
+ * Class User
+ *
+ * @property int $id
+ * @property string $username
+ * @property string $password
+ * @property string $authKey
+ * @property string $accessToken
+ *
+ * @package app\models
+ */
+class User extends ActiveRecord implements IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
+    /**
+     * @return UserQuery
+     */
+    public static function find()
+    {
+        return new UserQuery(get_called_class());
+    }
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    /**
+     * @return string
+     */
+    public static function tableName()
+    {
+        return '{{%user}}';
+    }
 
+    /**
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            [['username', 'password', 'authKey', 'accessToken'], 'required'],
+            [['username', 'password', 'authKey', 'accessToken'], 'string', 'max' => 255],
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     * @return array
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'username' => 'Username',
+            'password' => 'Password',
+            'authKey' => 'Auth key',
+            'accessToken' => 'Access token',
+        ];
+    }
 
     /**
      * @inheritdoc
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return self::findOne($id);
     }
 
     /**
@@ -41,30 +75,7 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername($username)
-    {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return self::find()->accessTokenIs($token)->one();
     }
 
     /**
@@ -92,6 +103,20 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
     }
 
     /**
+     * Finds user by username
+     *
+     * @param string $username
+     * @return static|null
+     */
+    public static function findByUsername($username)
+    {
+        /** @var static $user */
+        $user = self::find()->usernameIs($username)->one();
+
+        return $user;
+    }
+
+    /**
      * Validates password
      *
      * @param string $password password to validate
@@ -99,6 +124,17 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
-        return $this->password === $password;
+        return Yii::$app->security->validatePassword($password, $this->password);
+    }
+
+    /**
+     * Generates password hash from password and sets it to the model
+     *
+     * @param string $password
+     * @throws \yii\base\Exception
+     */
+    public function setPassword($password)
+    {
+        $this->password = Yii::$app->security->generatePasswordHash($password);
     }
 }

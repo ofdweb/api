@@ -45,7 +45,11 @@ class Account extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['token'], 'string', 'max' => 128],
         ];
     }
-  
+
+    /**
+     * @param $attribute
+     * @param $params
+     */
     public function validateToken($attribute, $params)
     {
         if (!Yii::$app->encrypter->decrypt($this->$attribute)) {
@@ -66,7 +70,10 @@ class Account extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'is_deleted' => 'Is Deleted',
         ];
     }
-  
+
+    /**
+     * @return array[]
+     */
     public function behaviors()
     {
         return [
@@ -123,7 +130,10 @@ class Account extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         $host = current($this->_host_list);
         $this->setAttribute('host', $host);
     }
-  
+
+    /**
+     *
+     */
     private function generateDbConnect()
     {
         $security = Yii::$app->getSecurity();
@@ -134,13 +144,20 @@ class Account extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'db_password' => $security->generateRandomString(8)
         ]);
     }
-  
+
+    /**
+     * @param $token
+     * @return false|mixed
+     */
     public function decryptTokenStatic($token)
     {
         $token = Yii::$app->encrypter->decrypt($token);
         return $token ? json_decode($token) : false;
     }
-  
+
+    /**
+     *
+     */
     public function encryptToken()
     {
         $token = json_encode([
@@ -153,6 +170,10 @@ class Account extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         $this->validate('token');
     }
 
+    /**
+     * @return bool
+     * @throws \Throwable
+     */
     public function signup()
     {
         $transaction = \Yii::$app->db->beginTransaction();

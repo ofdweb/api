@@ -20,7 +20,8 @@
         "yiisoft/yii2-swiftmailer": "~2.0.0",
         "yiisoft/yii2-queue": "^2.0",
         "pda/pheanstalk": "^3.1",
-        "nickcv/yii2-encrypter": "*"
+        "nickcv/yii2-encrypter": "*",
+        "yii2mod/yii2-settings": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",
